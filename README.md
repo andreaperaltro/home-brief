@@ -126,7 +126,7 @@ Questo repository implementa la webapp e l’esportazione dell’immagine. **Non
 
 ## Album fotografico e orari del quadro
 
-Aprire `/photos.html` per gestire l’album e `/frame.html` per la visualizzazione automatica nel browser:
+Aprire `/photos.html` per aggiungere o eliminare le foto dall’album (con conferma prima della cancellazione definitiva) e `/frame.html` per la visualizzazione automatica nel browser:
 
 | Ora in Europe/Rome | Contenuto |
 | --- | --- |
@@ -169,9 +169,12 @@ Tutte le richieste richiedono un cookie album valido oppure l’intestazione `Au
 | `GET /api/photos` | Elenco privato delle foto |
 | `POST /api/photos` | Aggiunge una foto; richiede la chiave amministratore |
 | `GET /api/photos/ID` | JPEG adattato al quadro |
+| `DELETE /api/photos/ID` | Elimina JPEG e PNG; richiede accesso amministratore |
 | `GET /api/photos/ID?format=display` | PNG a sei colori 1200 × 1600 |
 | `GET /api/display` | Modalità corrente, foto del giorno e URL del contenuto |
 
 L’API di caricamento accetta il file immagine come corpo della richiesta oppure un multipart con campo `photo`. Il parametro `fit=cover` abilita il ritaglio; il valore predefinito è `contain`.
 
 **Stato dell’integrazione:** `/frame.html` applica gli orari mentre il browser è aperto. Nella fascia Morning Brief il contenuto è ancora una pagina con rendering Canvas nel browser, non un PNG generato da un servizio autonomo. I token Google scadono e richiedono un nuovo accesso: il brief delle 06:00 a browser chiuso e il download automatico dal dispositivo richiedono ancora l’integrazione server dei calendari e del firmware. La parte foto è già servita come immagine privata scaricabile con la chiave display.
+
+Se viene eliminata la foto del giorno, al successivo aggiornamento (entro circa un minuto nella pagina quadro aperta) viene scelta una foto tra quelle rimaste. Se l’album è vuoto viene rimossa l’immagine precedente e mostrato l’invito a caricare una foto.

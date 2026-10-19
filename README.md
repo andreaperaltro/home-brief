@@ -43,6 +43,8 @@ Riferimenti: [prodotto Waveshare](https://www.waveshare.com/product/displays/e-p
 | RSS ANSA | Notizie |
 | Node.js e node:test | Runtime e controlli automatici |
 | GitHub e Vercel | Versionamento e pubblicazione automatica |
+| Vercel Blob privato | Album foto e selezione giornaliera, separati dal repository |
+| Sharp e dithering Floyd–Steinberg | Adattamento delle foto, rimozione metadati e PNG a sei colori |
 
 I font usati sono PP Neue Montreal e PP Neue Montreal Mono. Sono font commerciali: per riutilizzarli o redistribuirli occorre una licenza adeguata. In alternativa sostituire i file e le dichiarazioni `@font-face` in `public/style.css` con font di cui si possiedono i diritti.
 
@@ -121,3 +123,55 @@ npm start
 ```
 
 Questo repository implementa la webapp e l’esportazione dell’immagine. **Non include ancora il firmware ESP32-S3, la trasmissione automatica al display o un servizio che aggiorni i calendari a browser chiuso.** La conversione nel formato richiesto dal firmware e la prova fisica sul pannello sono passaggi di integrazione successivi.
+
+## Album fotografico e orari del quadro
+
+Aprire `/photos.html` per gestire l’album e `/frame.html` per la visualizzazione automatica nel browser:
+
+| Ora in Europe/Rome | Contenuto |
+| --- | --- |
+| 06:00–10:59 | Morning Brief |
+| 11:00–05:59 del giorno dopo | Una foto del giorno |
+
+Il cambio segue anche l’ora legale. La selezione giornaliera scorre ciclicamente nell’album ed è salvata nello storage: aggiungere foto non cambia quella già scelta per oggi. Servono almeno due foto per avere immagini diverse in giorni consecutivi. Se l’album è vuoto viene mostrato un invito a caricare la prima foto.
+
+Le foto sono **private, separate da GitHub**, in Vercel Blob. Il server adatta ogni immagine a 1200 × 1600 pixel, elimina i metadati e salva una copia JPEG e un PNG con dithering a sei colori. Per impostazione predefinita la foto viene mantenuta intera, con bordi bianchi se necessari; “Riempi il quadro” permette invece il ritaglio. La palette è un riferimento digitale e richiede ancora verifica sui pigmenti del pannello fisico.
+
+### Configurazione dell’album su una propria installazione
+
+1. Creare un Vercel Blob store con accesso **Private** e collegarlo al proprio progetto nell’ambiente Production. Il collegamento configura le credenziali server dello storage (`BLOB_STORE_ID` con OIDC oppure `BLOB_READ_WRITE_TOKEN`, secondo il metodo di provisioning); in ambienti locali usare le credenziali di sviluppo previste da Vercel Blob.
+2. Impostare `PHOTO_ADMIN_KEY` e `PHOTO_DISPLAY_KEY` come due segreti casuali, distinti e lunghi almeno 32 caratteri nelle variabili server dell’ambiente desiderato. Non usare prefissi `NEXT_PUBLIC_`.
+3. Pubblicare nuovamente. La chiave amministratore apre `/photos.html`; la chiave display consente soltanto la lettura.
+4. Caricare almeno due foto. La pagina dell’album converte e ridimensiona i file nel browser prima del caricamento; l’API accetta file sotto 4 MB.
+
+L’accesso all’album usa un cookie HttpOnly, Secure e SameSite=Strict, valido per 30 giorni. Il quadro può usare quel cookie oppure una chiave di sola lettura conservata nella sessione della scheda. La disconnessione chiude la sessione album di quel browser; per revocare tutte le sessioni o un accesso Shortcut sostituire la relativa chiave nell’ambiente Vercel e ridistribuire.
+
+### Shortcut iPhone dal menu Condividi
+
+Creare un comando rapido “Invia al quadro”, abilitare **Mostra nel menu Condividi** e accettare immagini come input. Aggiungere questi passaggi:
+
+1. Ricevere l’immagine dal menu Condividi; in assenza di input, scegliere una foto.
+2. Ridimensionare la foto e convertirla in **JPEG**, disattivando la conservazione dei metadati.
+3. Usare **Ottieni contenuto dell’URL** verso `https://IL-PROPRIO-DOMINIO/api/photos`, metodo `POST`, corpo **File**: il JPEG convertito.
+4. Aggiungere le intestazioni `Content-Type: image/jpeg` e `Authorization: Bearer CHIAVE_PRIVATA_ALBUM`.
+5. Mostrare una conferma soltanto quando la risposta contiene `ok: true`; in caso contrario mostrare l’errore restituito.
+
+Riferimento Apple: [ricevere immagini dal menu Condividi](https://support.apple.com/en-ie/guide/shortcuts/apd350ce757a/ios).
+
+La chiave va inserita nella propria Shortcut, mai nel codice Git o nella query dell’URL. Per inviare più foto ripetere la richiesta per ciascuna immagine. Non condividere una Shortcut che contiene la propria chiave. Gli HEIC vanno convertiti in JPEG sul telefono per evitare dipendenze dal decoder del server. La creazione e l’installazione del comando rapido sul dispositivo restano un passaggio da completare sull’iPhone.
+
+### API disponibili per la futura integrazione ESP32-S3
+
+Tutte le richieste richiedono un cookie album valido oppure l’intestazione `Authorization: Bearer …`.
+
+| Endpoint | Funzione |
+| --- | --- |
+| `GET /api/photos` | Elenco privato delle foto |
+| `POST /api/photos` | Aggiunge una foto; richiede la chiave amministratore |
+| `GET /api/photos/ID` | JPEG adattato al quadro |
+| `GET /api/photos/ID?format=display` | PNG a sei colori 1200 × 1600 |
+| `GET /api/display` | Modalità corrente, foto del giorno e URL del contenuto |
+
+L’API di caricamento accetta il file immagine come corpo della richiesta oppure un multipart con campo `photo`. Il parametro `fit=cover` abilita il ritaglio; il valore predefinito è `contain`.
+
+**Stato dell’integrazione:** `/frame.html` applica gli orari mentre il browser è aperto. Nella fascia Morning Brief il contenuto è ancora una pagina con rendering Canvas nel browser, non un PNG generato da un servizio autonomo. I token Google scadono e richiedono un nuovo accesso: il brief delle 06:00 a browser chiuso e il download automatico dal dispositivo richiedono ancora l’integrazione server dei calendari e del firmware. La parte foto è già servita come immagine privata scaricabile con la chiave display.

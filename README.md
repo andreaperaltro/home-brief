@@ -1,6 +1,6 @@
 # Home Brief
 
-Una dashboard per trasformare un display e-paper in un quadro con le informazioni della giornata: data, meteo, due agende Google Calendar e quattro notizie. Il layout è verticale, pensato per essere letto come una pagina stampata.
+Una dashboard per trasformare un display e-paper in un quadro con le informazioni della giornata: data, meteo, due agende Google Calendar e sei notizie. Il layout è verticale, pensato per essere letto come una pagina stampata.
 
 La webapp mostra un’anteprima e genera un PNG pronto per le prove sul display. Il repository permette di ricreare l’interfaccia sul proprio computer o sul proprio hosting, usando i propri account e la propria configurazione.
 
@@ -26,7 +26,7 @@ Riferimenti: [prodotto Waveshare](https://www.waveshare.com/product/displays/e-p
 - Data e orari nel fuso Europe/Rome.
 - Meteo reale di Milano da Open-Meteo, con MET Norway come fonte alternativa.
 - Due accessi Google indipendenti, con selezione di uno o più calendari per ogni agenda, in sola lettura.
-- Notizie dai feed RSS ANSA: tecnologia, mondo, cultura e scienza.
+- Notizie dai feed RSS ANSA: tecnologia, mondo, cultura, scienza, economia e sport.
 - Aggiornamento manuale e automatico ogni 15 minuti mentre la pagina è visibile.
 - Ripristino di accessi e selezioni dopo il refresh nella stessa scheda, finché il token Google è valido.
 - Anteprima, modalità solo quadro ed esportazione PNG. Gli stati delle fonti restano nei controlli della webapp e non vengono stampati in fondo al quadro.

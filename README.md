@@ -16,7 +16,7 @@ Inserire il proprio `GOOGLE_CLIENT_ID` in `.env.local`, oppure nelle variabili d
 
 - Meteo di Milano: Open-Meteo, con ripiego MET Norway.
 - Quattro notizie dai feed ufficiali ANSA: tecnologia, mondo, cultura, scienza.
-- Google Calendar: accesso interattivo in sola lettura con Google Identity Services. Ogni visitatore autorizza il proprio account e seleziona i calendari.
+- Google Calendar: accesso interattivo in sola lettura con Google Identity Services. Andrea e Mavi accedono separatamente al proprio account e selezionano uno o più calendari. Le due sessioni sono indipendenti.
 - Aggiornamento ogni 15 minuti mentre la pagina è visibile, oltre al pulsante manuale.
 - PNG bianco/nero 1200 × 1600, con esportazione ruotata 1600 × 1200.
 

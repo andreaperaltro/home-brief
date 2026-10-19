@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
+import {parseFeed,condition} from '../lib/live-sources.mjs';
+test('RSS CDATA, entità XML e data del titolo',()=>{const n=parseFeed('<rss><item><title><![CDATA[Scienza &amp; ricerca]]></title><link>https://www.ansa.it/notizia.html</link><pubDate>Mon, 19 Oct 2026 10:00:00 GMT</pubDate></item></rss>','SCIENZA');assert.equal(n.title,'Scienza & ricerca');assert.equal(n.publishedAt,'2026-10-19T10:00:00.000Z');});
+test('link non sicuri e feed senza item non diventano notizie',()=>{assert.throws(()=>parseFeed('<item><title>Test</title><link>javascript:alert(1)</link><pubDate>Mon, 19 Oct 2026 10:00:00 GMT</pubDate></item>','MONDO'));assert.throws(()=>parseFeed('<rss/>','MONDO'));});
+test('WMO conosciuti e sconosciuti',()=>{assert.equal(condition(61),'Pioggia debole');assert.equal(condition(999),'Condizioni non disponibili');});
+const source=readFileSync(new URL('../public/live.js',import.meta.url),'utf8');
+const fn=source.slice(source.indexOf('function romeMidnight('),source.indexOf('async function googleRead'));
+const midnight=vm.runInNewContext(fn+';romeMidnight;',{Intl,Date});
+test('giorni calendario Europe/Rome: cambio ora 23 e 25 ore',()=>{assert.equal(midnight('2026-10-19'),'2026-10-18T22:00:00.000Z');assert.equal((Date.parse(midnight('2026-10-26'))-Date.parse(midnight('2026-10-25')))/3600000,25);assert.equal((Date.parse(midnight('2026-03-30'))-Date.parse(midnight('2026-03-29')))/3600000,23);});

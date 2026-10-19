@@ -24,7 +24,7 @@ Inserire il proprio `GOOGLE_CLIENT_ID` in `.env.local`, oppure nelle variabili d
 
 Abilitare Google Calendar API nel proprio progetto Google Cloud e creare un client OAuth di tipo applicazione web. Aggiungere l’origine HTTPS del proprio deployment Vercel alle origini JavaScript autorizzate. Gli account autorizzati devono essere utenti di test finché l’app resta in test.
 
-Il repository non contiene credenziali Google, identificatori dei calendari o eventi personali. I token OAuth vivono soltanto nella memoria della pagina e vengono inviati direttamente alle API Google; non passano dal server e non vengono salvati nel browser. Anche gli eventi rimangono nella memoria della pagina. Il client ID è un identificatore pubblico, fornito al browser dall’endpoint di configurazione, ma è configurato esclusivamente nell’ambiente di hosting. Nessun client secret è richiesto dal flusso attuale.
+Il repository non contiene credenziali Google, identificatori dei calendari o eventi personali. I token OAuth e le selezioni sono conservati in sessionStorage nella scheda del browser per sopravvivere al refresh. I token vengono inviati direttamente alle API Google, senza passare dal server. La disconnessione rimuove la sessione salvata; la chiusura della scheda termina questa conservazione. Alla scadenza del token Google occorre accedere nuovamente. Anche gli eventi rimangono nella memoria della pagina. Il client ID è un identificatore pubblico, fornito al browser dall’endpoint di configurazione, ma è configurato esclusivamente nell’ambiente di hosting. Nessun client secret è richiesto dal flusso attuale.
 
 Su Vercel impostare `GOOGLE_CLIENT_ID` negli ambienti desiderati. Non aggiungere file `.env.local`, `.vercel/`, log o esportazioni del calendario al repository.
 

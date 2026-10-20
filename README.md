@@ -26,7 +26,7 @@ Riferimenti: [prodotto Waveshare](https://www.waveshare.com/product/displays/e-p
 - Data e orari nel fuso Europe/Rome.
 - Meteo reale di Milano da Open-Meteo, con MET Norway come fonte alternativa.
 - Due accessi Google indipendenti, con selezione di uno o più calendari per ogni agenda, in sola lettura.
-- Fino a otto notizie dai feed RSS ANSA: tecnologia, mondo, cultura, scienza, economia e sport. Abstract originali della fonte e QR per aprire gli articoli.
+- Fino a otto notizie dai feed RSS ANSA: tecnologia, mondo, cultura, scienza, economia e sport. Abstract originali della fonte e link agli articoli nella webapp.
 - Aggiornamento manuale e automatico ogni 15 minuti mentre la pagina è visibile.
 - Ripristino di accessi e selezioni dopo il refresh nella stessa scheda, finché il token Google è valido.
 - Anteprima, modalità solo quadro ed esportazione PNG. Gli stati delle fonti restano nei controlli della webapp e non vengono stampati in fondo al quadro.
@@ -180,12 +180,12 @@ L’API di caricamento accetta il file immagine come corpo della richiesta oppur
 Se viene eliminata la foto del giorno, al successivo aggiornamento (entro circa un minuto nella pagina quadro aperta) viene scelta una foto tra quelle rimaste. Se l’album è vuoto viene rimossa l’immagine precedente e mostrato l’invito a caricare una foto.
 
 
-## News adattive e QR
+## News adattive
 
 La pagina misura i testi con i font effettivi e usa lo spazio rimasto sotto le agende. Valuta fino a otto articoli unici, mantenendo le sei categorie iniziali e scegliendo gli extra tra gli aggiornamenti più recenti. Prova combinazioni di sei/otto news con abstract fino a tre righe oppure titoli compatti; nelle giornate molto dense può ridurre ulteriormente il numero di articoli per evitare sovrapposizioni. I caratteri delle news non vengono rimpiccioliti. Le notizie complete restano raggiungibili dai link nella webapp.
 
 Gli abstract provengono dal campo `description` dei feed RSS: non sono generati dal titolo e non vengono inventati se la descrizione manca. Alcune fonti forniscono soltanto un breve sommario; il testo viene troncato con puntini di sospensione quando supera lo spazio assegnato.
 
-Ogni articolo disponibile ha un QR con moduli di 3 pixel e un margine bianco di 4 moduli. La dimensione tipica sul dominio di produzione è 123 × 123 pixel. Il codice contiene un link breve dello stesso sito (`/n/ID`), che reindirizza all’URL ANSA originale. L’associazione tra ID e URL è conservata nello storage privato in `news-links/`, separata dalle foto: i QR dei PNG già esportati continuano così a puntare alla notizia originaria anche dopo un aggiornamento dei feed. Cambiare dominio o eliminare quell’archivio interrompe i link preesistenti.
+La tipografia segue Figma: categorie 24 px Medium, titoli 18 px Regular, abstract 14 px Book e fonte 16 px Mono Regular. Il quadro non mostra QR; le colonne sono interamente dedicate ai testi. I link agli articoli restano disponibili nella webapp.
 
-I reindirizzamenti sono pubblici e limitati a URL HTTPS di ANSA; non contengono credenziali né richiedono accesso all’album. Per abilitarli in un fork serve collegare un proprio store Vercel Blob privato come per l’album. Senza storage, oppure durante un errore dello storage, le news continuano a funzionare con i normali link web ma i QR non vengono mostrati. Il collaudo fisico della scansione sul pannello resta necessario.
+I reindirizzamenti `/n/ID` già creati sono mantenuti per i PNG esportati in precedenza. La dashboard non genera nuovi QR né nuove associazioni nello storage.

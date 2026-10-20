@@ -1,0 +1,3 @@
+import {resolveNewsLink,validNewsId} from '../../../lib/news-links.mjs';
+export const dynamic='force-dynamic';
+export async function GET(_request:Request,{params}:{params:Promise<{id:string}>}){const {id}=await params;if(!validNewsId(id))return new Response('Link non valido.',{status:404});try{const url=await resolveNewsLink(id);if(!url)return new Response('Notizia non disponibile.',{status:404});return new Response(null,{status:302,headers:{Location:url,'Cache-Control':'public, max-age=86400','Referrer-Policy':'no-referrer'}});}catch{return new Response('Link temporaneamente non disponibile. Riprova tra poco.',{status:503,headers:{'Cache-Control':'no-store'}});}}

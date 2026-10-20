@@ -1,0 +1,3 @@
+import {calendarHeaders,calendarService,CalendarError} from '../../../../lib/calendar-server.mjs';
+export const dynamic='force-dynamic';
+export async function GET(request:Request){let result='failed',detail='';try{const person=await calendarService.finish(request);result='connected-'+person;}catch(error){if(error instanceof CalendarError)detail=error.message;}const target=new URL('/dashboard.html',request.url);target.searchParams.set('calendar',result);if(detail)target.searchParams.set('calendarError',detail);return new Response(null,{status:303,headers:{...calendarHeaders,Location:target.href,'Set-Cookie':calendarService.clearFlowCookie()}});}

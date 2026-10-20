@@ -1,0 +1,8 @@
+import {authorized} from '../../../../lib/photo-auth.mjs';
+import {calendarAdmin,calendarError,CalendarError,calendarHeaders,calendarService,people} from '../../../../lib/calendar-server.mjs';
+export const dynamic='force-dynamic';
+type Context={params:Promise<{person:string}>};
+async function personFor(context:Context){const {person}=await context.params;if(!people.includes(person))throw new CalendarError('Agenda non valida.',400);return person;}
+export async function GET(request:Request,context:Context){if(!authorized(request))return calendarError(new CalendarError('Accedi all’area privata per visualizzare i calendari.',401));try{const person=await personFor(context),settings=new URL(request.url).searchParams.get('view')==='calendars';if(settings&&!calendarAdmin(request))throw new CalendarError('Accesso amministratore richiesto.',403);return Response.json(await(settings?calendarService.calendars(person):calendarService.events(person)),{headers:calendarHeaders});}catch(error){return calendarError(error);}}
+export async function PATCH(request:Request,context:Context){if(!calendarAdmin(request,true))return calendarError(new CalendarError('Accesso amministratore richiesto.',401));try{const person=await personFor(context),{selected}=await request.json();return Response.json(await calendarService.select(person,selected),{headers:calendarHeaders});}catch(error){return calendarError(error);}}
+export async function DELETE(request:Request,context:Context){if(!calendarAdmin(request,true))return calendarError(new CalendarError('Accesso amministratore richiesto.',401));try{return Response.json(await calendarService.disconnect(await personFor(context)),{headers:calendarHeaders});}catch(error){return calendarError(error);}}

@@ -28,7 +28,7 @@ Riferimenti: [prodotto Waveshare](https://www.waveshare.com/product/displays/e-p
 - Due accessi Google indipendenti, con selezione di uno o più calendari per ogni agenda, in sola lettura.
 - Fino a otto notizie dai feed RSS ANSA: tecnologia, mondo, cultura, scienza, economia e sport. Abstract originali della fonte e link agli articoli nella webapp.
 - Aggiornamento manuale e automatico ogni 15 minuti mentre la pagina è visibile.
-- Ripristino di accessi e selezioni dopo il refresh nella stessa scheda, finché il token Google è valido.
+- Collegamenti persistenti cifrati sul server, con rinnovo automatico dell’accesso Google e selezioni conservate tra dispositivi.
 - Anteprima, modalità solo quadro ed esportazione PNG. Gli stati delle fonti restano nei controlli della webapp e non vengono stampati in fondo al quadro.
 
 ## Tecnologie
@@ -38,7 +38,7 @@ Riferimenti: [prodotto Waveshare](https://www.waveshare.com/product/displays/e-p
 | Next.js 16, React 19 e TypeScript | Applicazione e API server |
 | JavaScript, HTML e CSS | Interfaccia della dashboard |
 | HTML Canvas 2D | Composizione tipografica e generazione del PNG |
-| Google Identity Services e Calendar API v3 | Autorizzazione OAuth e lettura calendari/eventi |
+| Google Auth Library e Calendar API v3 | Autorizzazione OAuth e lettura calendari/eventi |
 | Open-Meteo e MET Norway | Previsioni meteo |
 | RSS ANSA | Notizie |
 | Node.js e node:test | Runtime e controlli automatici |
@@ -70,31 +70,31 @@ Ogni copia del progetto deve usare **un proprio progetto Google Cloud e un propr
 2. Abilitare **Google Calendar API**.
 3. Configurare Google Auth Platform: schermata di consenso, pubblico e utenti di test quando l’app è in modalità test.
 4. Creare un client OAuth di tipo **Applicazione web**.
-5. Aggiungere alle origini JavaScript autorizzate `http://localhost:3000` e l’origine HTTPS del proprio sito, senza il percorso `/dashboard.html`.
-6. Inserire il proprio client ID in `.env.local`:
+5. Dichiarare in **Data access** i permessi `calendar.calendarlist.readonly` e `calendar.events.readonly`.
+6. Aggiungere agli **URI di reindirizzamento autorizzati** l’URL esatto `https://PROPRIO-DOMINIO/api/calendar/callback`.
+7. Configurare nell’ambiente del server `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` e `CALENDAR_ENCRYPTION_KEY` (32 byte casuali espressi come 64 caratteri esadecimali). Usare uno storage Blob privato e le chiavi dell’album descritti sotto. Il client secret e la chiave di cifratura devono essere Secret di Vercel, mai valori pubblici o versionati.
+8. Distribuire di nuovo, aprire **Collega Google Calendar**, sbloccare l’area privata con la chiave amministratore dell’album, poi premere **Collega Andrea** o **Collega Mavi**. Ogni persona autorizza il proprio account in Google e, al ritorno, sceglie i calendari. La selezione iniziale è vuota per evitare di includere calendari non desiderati.
 
-```dotenv
-GOOGLE_CLIENT_ID=il-proprio-client-id.apps.googleusercontent.com
-```
+Il server usa il flusso authorization code con accesso offline, consenso esplicito, state legato alla sessione e PKCE. La libreria ufficiale Google rinnova i token di accesso usando il refresh token senza accessi quotidiani. La modalità Testing di Google limita normalmente i nuovi refresh token Calendar a sette giorni; per l’uso duraturo configurare lo stato In production. Google può comunque revocare o far scadere un’autorizzazione: l’app segnalerà di ricollegarla. La verifica Google e lo stato di pubblicazione sono distinti; le eventuali esenzioni per uso personale non eliminano gli avvisi di app non verificata.
 
-7. Riavviare la webapp. Aprire **Collega Google Calendar**, accedere con l’account desiderato e selezionare i calendari. Ripetere con il secondo account per l’altra agenda.
-
-Le autorizzazioni richieste sono `calendar.calendarlist.readonly` e `calendar.events.readonly`. Non è richiesto un client secret dal flusso attuale. Le etichette Andrea e Mavi sono nomi dell’interfaccia, non indirizzi Google né account precollegati; si possono cambiare in `public/app.js`, `public/live.js` e `public/dashboard.html`.
+Le etichette Andrea e Mavi sono nomi dell’interfaccia, non account precollegati. Un fork parte senza autorizzazioni personali e deve usare un proprio progetto Google, proprie variabili e proprio storage.
 
 ## Privacy e separazione dalla configurazione personale
 
 Nel codice non sono inclusi client ID Google reali, password, token OAuth, indirizzi email, identificatori dei calendari o eventi reali. Gli esempi di agenda sono dimostrativi.
 
-- Il client ID viene configurato nel proprio ambiente di hosting o nel browser; è un identificatore pubblico OAuth, non una password e non autorizza da solo l’accesso ai calendari.
-- I token e le selezioni sono conservati nel `sessionStorage` della scheda. Sopravvivono al refresh; la chiusura della scheda normalmente termina la sessione, salvo il ripristino del browser. I token scaduti non vengono riutilizzati.
-- Il pulsante Disconnetti rimuove la sessione salvata per quella persona. Alla scadenza Google occorre accedere nuovamente.
-- Le richieste ai calendari partono direttamente dal browser verso Google. Token ed eventi non passano dalle API della webapp e non vengono salvati su GitHub.
-- Gli eventi letti restano nella memoria della pagina. Il PNG esportato contiene ciò che è visibile sul quadro, inclusi gli appuntamenti scelti.
-- `.env.local`, `.vercel/`, dipendenze e build sono esclusi da Git. Non aggiungere esportazioni o log contenenti dati personali.
+- I secret OAuth e la chiave di cifratura sono esclusivamente variabili del server. Non vengono restituiti al browser.
+- Refresh token, identificativi selezionati e data di collegamento sono cifrati con AES-256-GCM in `calendar-connections/`, nello storage Blob privato. Non cambiare `CALENDAR_ENCRYPTION_KEY` senza pianificare un nuovo collegamento di entrambi gli account.
+- Il browser riceve solo i dati necessari all’interfaccia. Lettura degli eventi protetta dalla sessione privata dell’album o dalla chiave display; collegamento, selezioni e disconnessione richiedono amministratore. Le scritture verificano anche l’origine della richiesta.
+- I cookie della sessione privata durano al massimo 30 giorni. La loro scadenza richiede di riaprire l’area privata, non un nuovo consenso Google: le autorizzazioni persistono sul server.
+- Disconnetti elimina il refresh token e le selezioni del solo account scelto dal record attivo. Per revocare anche il consenso Google usare le impostazioni Collegamenti dell’Account Google. Scritture condizionali impediscono a operazioni in corso di ripristinare un account appena scollegato.
+- Gli eventi vengono letti su richiesta e non archiviati in Blob; restano nella memoria della richiesta e della pagina. I PNG esportati contengono gli appuntamenti visibili.
+- Le vecchie sessioni Google temporanee del browser vengono rimosse dalla nuova interfaccia. Non vengono convertite in refresh token: è necessario autorizzare nuovamente ogni account una volta.
+- `.env*` (tranne il modello vuoto `.env.example`), `.vercel/`, dipendenze e build sono esclusi da Git. Non pubblicare esportazioni, log o immagini con dati privati.
 
 ## Pubblicazione su Vercel
 
-Importare la propria copia del repository in Vercel come progetto Next.js. Configurare `GOOGLE_CLIENT_ID` nelle variabili d’ambiente dei deployment desiderati e aggiungere l’origine del nuovo sito al proprio client OAuth Google. Pubblicare nuovamente dopo aver cambiato le variabili.
+Importare la propria copia del repository in Vercel come progetto Next.js. Configurare le variabili server descritte sopra, con secret separati per ogni ambiente, e registrare il redirect URI del nuovo sito nel proprio client OAuth Google. Pubblicare nuovamente dopo aver cambiato le variabili.
 
 Con l’integrazione Git attiva, i commit sul branch di produzione avviano automaticamente il deployment. La configurazione del sito originale rimane nel suo ambiente Vercel e non viene ereditata dai fork.
 
@@ -110,7 +110,9 @@ Con l’integrazione Git attiva, i commit sul branch di produzione avviano autom
 | `app/api/config/route.ts` | Client ID configurato nell’ambiente |
 | `app/api/weather/route.ts` | Endpoint meteo |
 | `app/api/news/route.ts` | Endpoint notizie |
-| `tests/` | Controlli su fonti, fusi orari e sessioni Google |
+| `lib/calendar-server.mjs` | OAuth offline, cifratura, storage e lettura Calendar sul server |
+| `app/api/calendar/` | Collegamento, callback, selezioni e lettura privata delle agende |
+| `tests/` | Controlli su fonti, fusi orari, OAuth, cifratura e separazione account |
 
 La località Milano, le coordinate meteo, i feed e i nomi delle agende sono attualmente definiti nel codice. Per cambiare città aggiornare entrambe le fonti meteo in `lib/live-sources.mjs` e le etichette in `public/dashboard.html` e `public/live.js`; per cambiare fuso aggiornare anche il calcolo delle giornate e gli orari in `public/live.js`.
 
@@ -175,7 +177,7 @@ Tutte le richieste richiedono un cookie album valido oppure l’intestazione `Au
 
 L’API di caricamento accetta il file immagine come corpo della richiesta oppure un multipart con campo `photo`. Il parametro `fit=cover` abilita il ritaglio; il valore predefinito è `contain`.
 
-**Stato dell’integrazione:** `/frame.html` applica gli orari mentre il browser è aperto. Nella fascia Morning Brief il contenuto è ancora una pagina con rendering Canvas nel browser, non un PNG generato da un servizio autonomo. I token Google scadono e richiedono un nuovo accesso: il brief delle 06:00 a browser chiuso e il download automatico dal dispositivo richiedono ancora l’integrazione server dei calendari e del firmware. La parte foto è già servita come immagine privata scaricabile con la chiave display.
+**Stato dell’integrazione:** `/frame.html` applica gli orari mentre il browser è aperto. Nella fascia Morning Brief il contenuto è ancora una pagina con rendering Canvas nel browser, non un PNG generato da un servizio autonomo. I calendari sono ora disponibili tramite API private con rinnovo automatico anche senza browser. La generazione pianificata del PNG completo delle 06:00 e il download automatico dal dispositivo richiedono ancora l’integrazione del rendering server e del firmware. La parte foto è già servita come immagine privata scaricabile con la chiave display.
 
 Se viene eliminata la foto del giorno, al successivo aggiornamento (entro circa un minuto nella pagina quadro aperta) viene scelta una foto tra quelle rimaste. Se l’album è vuoto viene rimossa l’immagine precedente e mostrato l’invito a caricare una foto.
 

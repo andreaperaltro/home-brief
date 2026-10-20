@@ -177,7 +177,7 @@ Tutte le richieste richiedono un cookie album valido oppure l’intestazione `Au
 
 L’API di caricamento accetta il file immagine come corpo della richiesta oppure un multipart con campo `photo`. Il parametro `fit=cover` abilita il ritaglio; il valore predefinito è `contain`.
 
-**Stato dell’integrazione:** `/frame.html` applica gli orari mentre il browser è aperto. Nella fascia Morning Brief il contenuto è ancora una pagina con rendering Canvas nel browser, non un PNG generato da un servizio autonomo. I calendari sono ora disponibili tramite API private con rinnovo automatico anche senza browser. La generazione pianificata del PNG completo delle 06:00 e il download automatico dal dispositivo richiedono ancora l’integrazione del rendering server e del firmware. La parte foto è già servita come immagine privata scaricabile con la chiave display.
+**Stato dell’integrazione:** il servizio `/api/device/frame` genera sul server il buffer per il pannello. Il firmware in `firmware/home-brief` scarica l’immagine via HTTPS, verifica dimensioni e SHA-256, aggiorna il display soltanto se cambia e torna in deep sleep. Il server sceglie Morning Brief dalle 06:00 alle 11:00 e una foto del giorno dalle 11:00 alle 06:00, secondo Europe/Rome, inclusa l’ora legale. La generazione avviene quando il dispositivo richiede l’immagine; non serve un browser aperto. Il quadro controlla ogni 15 minuti, con nuovo tentativo dopo 5 minuti in caso di errore, conservando l’immagine precedente. L’autonomia a batteria va misurata sull’hardware reale.
 
 Se viene eliminata la foto del giorno, al successivo aggiornamento (entro circa un minuto nella pagina quadro aperta) viene scelta una foto tra quelle rimaste. Se l’album è vuoto viene rimossa l’immagine precedente e mostrato l’invito a caricare una foto.
 
@@ -191,3 +191,14 @@ Gli abstract provengono dal campo `description` dei feed RSS: non sono generati 
 La tipografia segue Figma: categorie 24 px Medium, titoli 18 px Regular, abstract 14 px Book e fonte 16 px Mono Regular. Il quadro non mostra QR; le colonne sono interamente dedicate ai testi. I link agli articoli restano disponibili nella webapp.
 
 I reindirizzamenti `/n/ID` già creati sono mantenuti per i PNG esportati in precedenza. La dashboard non genera nuovi QR né nuove associazioni nello storage.
+
+
+## Firmware ESP32-S3 e rendering server
+
+Vedi [le istruzioni firmware](firmware/home-brief/README.md). Il primo test del pannello è in `firmware/display-test`. Il driver deriva dall’esempio ufficiale Waveshare, con licenza conservata accanto ai sorgenti.
+
+Il server usa Playwright e Chromium (`@sparticuz/chromium`) per eseguire lo stesso Canvas della webapp, con gli stessi font e separatori Figma. Sharp produce i pixel; il Morning Brief è sogliato in bianco e nero, mentre le foto usano la versione a sei colori già preparata nell’album. Il buffer finale è verticale, 1200 × 1600, 4 bit per pixel, 960.000 byte. Le coppie di pixel sono inviate con il primo pixel nel nibble alto: nero 0, bianco 1, giallo 2, rosso 3, blu 5, verde 6.
+
+`GET /api/device/frame` richiede la chiave display o amministratore. Restituisce un buffer binario privato, ETag, SHA-256 e intervallo fino al controllo successivo. `If-None-Match` permette risposte 304 senza riscaricare l’immagine. `?mode=brief` e `?mode=photo` permettono le prove manuali; il firmware segue normalmente l’orario automatico. Il brief viene trasmesso via HTTPS e conservato nello storage privato Blob come cache, per massimo 15 minuti prima della rigenerazione. Il servizio non introduce un nuovo accesso Google: usa i collegamenti già cifrati sul server.
+
+In sviluppo macOS si può impostare `CHROMIUM_EXECUTABLE_PATH` al proprio Chrome; su Vercel il binario Linux è incluso automaticamente. Non mettere chiavi, immagini personali, dump della flash o `device-secrets.h` nel repository.

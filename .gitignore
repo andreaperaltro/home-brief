@@ -6,3 +6,5 @@ node_modules/
 *.tsbuildinfo
 .DS_Store
 .vercel
+# Device credentials are provisioned locally and never committed.
+firmware/**/device-secrets.h

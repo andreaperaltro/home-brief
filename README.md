@@ -1,6 +1,6 @@
 # Home Brief
 
-Una dashboard per trasformare un display e-paper in un quadro con le informazioni della giornata: data, meteo, due agende Google Calendar e sei notizie. Il layout è verticale, pensato per essere letto come una pagina stampata.
+Una dashboard per trasformare un display e-paper in un quadro con le informazioni della giornata: data, meteo, due agende Google Calendar e sei notizie. Il layout è verticale, pensato per essere letto come una pagina stampata. La UI segue il progetto Figma: data a 90 px, meteo con condizioni e metriche a sinistra e previsioni a destra, agende affiancate della stessa altezza e sei news su tre righe. I contenuti del design sono segnaposto: la webapp usa le fonti reali configurate.
 
 La webapp mostra un’anteprima e genera un PNG pronto per le prove sul display. Il repository permette di ricreare l’interfaccia sul proprio computer o sul proprio hosting, usando i propri account e la propria configurazione.
 

@@ -58,3 +58,9 @@ test('the daily limit survives changes of six-hour slot',async()=>{
  const service=createOutfitService({storage,enabled:()=>true,now:()=>date,generate:async()=>{calls++;return 'Camicia a maniche lunghe e una giacca leggera per uscire.';}});
  await service(forecast(),{allowGenerate:true});date=new Date('2026-10-22T17:00:00Z');await service(forecast(),{allowGenerate:true});assert.equal(calls,1);
 });
+
+test('AI must include the main outfit, not only an accessory or vague climate text',async()=>{
+ const {validOutfitForPlan}=await import('../lib/outfit.mjs');const c=outfitConditions(forecast());
+ assert.equal(validOutfitForPlan('Indossa una sciarpa leggera per il vento e i cambiamenti di temperatura.',c),false);
+ assert.equal(validOutfitForPlan('Indossa camicia o maglia a maniche lunghe e giacca leggera.',c),true);
+});

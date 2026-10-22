@@ -45,3 +45,16 @@ test('gateway errors expose only an actionable category, never the raw provider 
  assert.equal(outfitErrorCode({statusCode:403,message:'This model is not available in the free tier'}),'model-not-eligible');
  assert.equal(outfitErrorCode({statusCode:403,message:'unknown private provider detail'}),'gateway-forbidden');
 });
+test('nonzero or unknown live prices prevent model generation',async()=>{
+ const {requireFreeModel,freeOutfitModel}=await import('../lib/outfit.mjs');
+ const catalog=pricing=>async()=>Response.json({data:[{id:freeOutfitModel,pricing}]});
+ assert.equal(await requireFreeModel(catalog({input:'0',output:'0'})),freeOutfitModel);
+ await assert.rejects(requireFreeModel(catalog({input:'0',output:'0.000001'})),/not free/);
+ await assert.rejects(requireFreeModel(catalog({})),/not free/);
+ await assert.rejects(requireFreeModel(catalog({input:null,output:null})),/not free/);
+});
+test('the daily limit survives changes of six-hour slot',async()=>{
+ const storage=memoryStore();let calls=0,date=new Date('2026-10-22T06:00:00Z');
+ const service=createOutfitService({storage,enabled:()=>true,now:()=>date,generate:async()=>{calls++;return 'Camicia a maniche lunghe e una giacca leggera per uscire.';}});
+ await service(forecast(),{allowGenerate:true});date=new Date('2026-10-22T17:00:00Z');await service(forecast(),{allowGenerate:true});assert.equal(calls,1);
+});

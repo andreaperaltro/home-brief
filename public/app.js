@@ -23,7 +23,8 @@ function forecastCondition(value){return String(value).replace('Parzialmente nuv
 function draw(){
  if(!ready)return;ctx.fillStyle='#fff';ctx.fillRect(0,0,1200,1600);
  const date=dateLabel();let size=90;font(size,600);while(size>60&&ctx.measureText(date).width>1160)font(--size,600);text(date,20,40+(120-size)/2,size,600);
- const wy=180;box(20,wy,1160,304);capText('METEO',42,wy+22);assetRule('section-rule',42,wy+65);
+ const outfitText=data.outfit?.text||'';const outfitLines=outfitText?Math.min(3,lines(outfitText,858,22,400).length):0;const outfitHeight=outfitText?Math.max(100,58+outfitLines*28):0;
+ const wy=180;box(20,wy,1160,304+outfitHeight);capText('METEO',42,wy+22);assetRule('section-rule',42,wy+65);
  let weatherSize=32;font(weatherSize,500);while(weatherSize>22&&ctx.measureText(data.weather).width>644)font(--weatherSize,500);block(data.weather,42,wy+75,644,weatherSize,500,1);assetRule('conditions-rule',42,wy+123);
  const temperatureY=wy+133;
  for(const [label,value,x] of [['Max',data.high,42],['Min',data.low,188]]){text(label,x,temperatureY);const rendered=value+'°';let temperatureSize=70;font(temperatureSize,500,true);while(temperatureSize>36&&ctx.measureText(rendered).width>126)font(--temperatureSize,500,true);text(rendered,x,temperatureY+75,temperatureSize,500,true);}
@@ -35,7 +36,8 @@ function draw(){
  assetRule('weather-divider',706,wy+75,217,true);
  const fx=726;[['Ora',0],['Condizioni',116],['Temp',352]].forEach(([label,offset])=>text(label,fx+offset,wy+75,22,500));assetRule('forecast-rule',fx,wy+106);
  rows(data.forecast).slice(0,6).forEach((r,i)=>{const y=wy+111+i*31;block(r[0]||'',fx,y,80,22,400,1);block(forecastCondition(r[1]||''),fx+116,y,200,22,400,1);text(r[2]||'',fx+352,y,22,500,true);});
- const ay=504,calendarHeight=Math.max(agendaHeight(rows(data.andrea)),agendaHeight(rows(data.mavi)),180);
+ if(outfitText){rule(42,wy+308,1116);text('COME VESTIRSI',42,wy+326,22,500);block(outfitText,300,wy+326,858,22,400,3,28);canvas.dataset.outfitLines=String(outfitLines);}
+ const ay=504+outfitHeight,calendarHeight=Math.max(agendaHeight(rows(data.andrea)),agendaHeight(rows(data.mavi)),180);
  agenda('ANDREA',data.andrea,20,ay,calendarHeight);agenda('MAVI',data.mavi,610,ay,calendarHeight);
  const ny=ay+calendarHeight+20;
  const plan=HomeBriefNews.choose(data.news,1580-ny,(value,width,weight,size)=>lines(value,width,size,weight).length),nh=plan.height;

@@ -202,3 +202,16 @@ Il server usa Playwright e Chromium (`@sparticuz/chromium`) per eseguire lo stes
 `GET /api/device/frame` richiede la chiave display o amministratore. Restituisce un buffer binario privato, ETag, SHA-256 e intervallo fino al controllo successivo. `If-None-Match` permette risposte 304 senza riscaricare l’immagine. `?mode=brief` e `?mode=photo` permettono le prove manuali; il firmware segue normalmente l’orario automatico. Il brief viene trasmesso via HTTPS e conservato nello storage privato Blob come cache, per massimo 15 minuti prima della rigenerazione. Il servizio non introduce un nuovo accesso Google: usa i collegamenti già cifrati sul server.
 
 In sviluppo macOS si può impostare `CHROMIUM_EXECUTABLE_PATH` al proprio Chrome; su Vercel il binario Linux è incluso automaticamente. Non mettere chiavi, immagini personali, dump della flash o `device-secrets.h` nel repository.
+
+
+## Come vestirsi — consiglio meteo e AI
+
+La riga nel blocco meteo propone capi, strati e accessori per il clima della giornata. Usa le previsioni diurne 07–22 di Open-Meteo: temperatura percepita (quando disponibile), minima/massima, vento e raffiche, probabilità e quantità di pioggia, neve e temporali. Con MET Norway usa esplicitamente le ore restanti e non inventa la temperatura percepita o la probabilità di pioggia mancanti.
+
+Il consiglio è una breve proposta generica, senza assunzioni su genere o guardaroba. Viene generato server-side con AI SDK e Vercel AI Gateway, modello configurabile con `OUTFIT_AI_MODEL` (inizialmente `nvidia/nemotron-3.5-lightning-free`, verificato nel catalogo il 22/10/2026). Il modello gratuito può conservare e usare prompt/risposte per miglioramento: riceve solo numeri e indicatori meteo, mai calendari o foto. Prezzi ed eleggibilità del modello possono cambiare; consultare il catalogo prima di abilitarlo su un’altra installazione.
+
+Su Vercel usa OIDC: non serve inserire una chiave nel codice. Per sviluppo locale, impostare `AI_GATEWAY_API_KEY` nel proprio file ambiente ignorato da Git. `OUTFIT_AI_ENABLED=false` disattiva le richieste al modello. Potrebbe servire completare la verifica dell’account AI Gateway o aggiungere un metodo di pagamento nella dashboard; l’app non acquista crediti e non abilita ricariche automatiche.
+
+Ogni fascia di sei ore prevede al massimo un tentativo di generazione per giorno, protetto da una scrittura condizionale Blob. Quattro record a rotazione evitano accumuli. Anche i fallimenti consumano il tentativo della fascia; il fallback a regole meteo resta disponibile. Una richiesta pubblica anonima non può generare AI: legge il consiglio già pronto o usa le regole. Le richieste autenticate della dashboard e il rendering privato del quadro possono generarlo. Se i dati cambiano fascia di temperatura, vento o pioggia, un consiglio precedente non compatibile viene sostituito dalle regole correnti fino alla fascia successiva. Nessun nuovo modello viene chiamato a ogni refresh.
+
+Il rendering Canvas e quello server condividono la stessa riga. Lo spazio aggiunto al meteo è sottratto alla sezione news, che continua a scegliere automaticamente il numero di articoli/abstract. Nessuna modifica al file Figma.

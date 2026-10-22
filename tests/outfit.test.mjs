@@ -39,3 +39,9 @@ test('storage failure prevents model calls and malformed output is not presented
  let calls=0;const unavailable=createOutfitService({storage:{get:async()=>{throw Error('Offline');}},enabled:()=>true,generate:async()=>{calls++;},now:()=>now});assert.equal((await unavailable(forecast(),{allowGenerate:true})).source,'rules');assert.equal(calls,0);
  const service=createOutfitService({storage:memoryStore(),enabled:()=>true,generate:async()=>'<script>bad</script>',now:()=>now});assert.equal((await service(forecast(),{allowGenerate:true})).source,'rules');
 });
+test('gateway errors expose only an actionable category, never the raw provider message',async()=>{
+ const {outfitErrorCode}=await import('../lib/outfit.mjs');
+ assert.equal(outfitErrorCode({statusCode:403,message:'customer_verification_required: add a payment method secret-value'}),'verification-required');
+ assert.equal(outfitErrorCode({statusCode:403,message:'This model is not available in the free tier'}),'model-not-eligible');
+ assert.equal(outfitErrorCode({statusCode:403,message:'unknown private provider detail'}),'gateway-forbidden');
+});

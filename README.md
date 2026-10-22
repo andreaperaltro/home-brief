@@ -1,6 +1,6 @@
 # Home Brief
 
-Una dashboard per trasformare un display e-paper in un quadro con le informazioni della giornata: data, meteo, due agende Google Calendar e notizie. Il layout è verticale, pensato per essere letto come una pagina stampata. La UI segue il progetto Figma: data a 90 px, meteo con condizioni e metriche a sinistra e previsioni a destra, sezioni scandite da separatori orizzontali, agende affiancate della stessa altezza e news su due colonne con impaginazione adattiva. I contenuti del design sono segnaposto: la webapp usa le fonti reali configurate.
+Una dashboard per trasformare un display e-paper in un quadro con le informazioni della giornata: data, meteo, due agende Google Calendar e notizie. Il layout è verticale, pensato per essere letto come una pagina stampata. La UI segue il progetto Figma: data a 90 px, meteo con condizioni e metriche a sinistra e previsioni a destra, sezioni con linee accanto ai titoli e separatori orizzontali, agende affiancate della stessa altezza e news su due colonne con impaginazione adattiva. I contenuti del design sono segnaposto: la webapp usa le fonti reali configurate.
 
 La webapp mostra un’anteprima e genera un PNG pronto per le prove sul display. Il repository permette di ricreare l’interfaccia sul proprio computer o sul proprio hosting, usando i propri account e la propria configurazione.
 
@@ -188,7 +188,7 @@ La pagina misura i testi con i font effettivi e usa lo spazio rimasto sotto le a
 
 Gli abstract provengono dal campo `description` dei feed RSS: non sono generati dal titolo e non vengono inventati se la descrizione manca. Alcune fonti forniscono soltanto un breve sommario; il testo viene troncato con puntini di sospensione quando supera lo spazio assegnato.
 
-La tipografia segue Figma: categorie 12 px Semibold, titoli 20 px Medium, abstract 14 px Regular e fonte 12 px Mono Regular. Il quadro non mostra QR; le colonne sono interamente dedicate ai testi. I link agli articoli restano disponibili nella webapp.
+La tipografia segue Figma: categorie 12 px Semibold, titoli 20 px Medium, abstract 14 px Regular e fonte 12 px Mono Regular. Il quadro non mostra QR; ogni colonna di 570 px è interamente dedicata ai testi, con 5 px tra categoria, titolo, abstract e fonte. I titoli delle agende non mostrano il conteggio degli appuntamenti. I link agli articoli restano disponibili nella webapp.
 
 I reindirizzamenti `/n/ID` già creati sono mantenuti per i PNG esportati in precedenza. La dashboard non genera nuovi QR né nuove associazioni nello storage.
 

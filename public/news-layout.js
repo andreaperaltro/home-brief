@@ -2,9 +2,9 @@
 // Shared by the canvas and layout tests. All measurements are native display pixels.
 var HomeBriefNews=(()=>{
  function measure(items,abstractLines,measureLines){
-  const cards=items.map(item=>{const textWidth=507,titleLines=Math.min(3,measureLines(item.title,textWidth,500,20));const summaryLines=item.abstract&&abstractLines?Math.min(abstractLines,measureLines(item.abstract,textWidth,400,14)):0;const bodyHeight=18+titleLines*24+(summaryLines?5+summaryLines*17:0)+5+14;return {item,textWidth,titleLines,abstractLines:summaryLines,height:bodyHeight};});
+  const cards=items.map(item=>{const textWidth=570,titleLines=Math.min(3,measureLines(item.title,textWidth,500,20));const summaryLines=item.abstract&&abstractLines?Math.min(abstractLines,measureLines(item.abstract,textWidth,400,14)):0;const bodyHeight=19+titleLines*24+(summaryLines?5+summaryLines*17:0)+5+14;return {item,textWidth,titleLines,abstractLines:summaryLines,height:bodyHeight};});
   const rowHeights=[];for(let i=0;i<cards.length;i+=2)rowHeights.push(Math.max(cards[i].height,cards[i+1]?.height||0));
-  return {cards,rowHeights,height:43+rowHeights.reduce((a,b)=>a+b,0)+Math.max(0,rowHeights.length-1)*20,abstractLines};
+  return {cards,rowHeights,height:33+rowHeights.reduce((a,b)=>a+b,0)+Math.max(0,rowHeights.length-1)*20,abstractLines};
  }
  function choose(items,availableHeight,measureLines){
   const pool=items.slice(0,8),hasAbstract=pool.some(n=>n.abstract);
